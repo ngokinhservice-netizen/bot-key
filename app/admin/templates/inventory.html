@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Kho Key & Nhập Hàng - MTK Admin{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-navy-700">
+        <div>
+            <h2 class="text-2xl font-black text-white tracking-wide">QUẢN LÝ KHO KEY & NHẬP HÀNG HÀNG LOẠT</h2>
+            <p class="text-xs text-slate-400 mt-0.5">Kiểm soát từng bản ghi key, chống bán trùng và thu hồi key</p>
+        </div>
+        <button onclick="document.getElementById('importKeysModal').classList.remove('hidden')"
+                class="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-navy-900 font-bold rounded-xl shadow-lg shadow-cyan-500/20 text-xs transition">
+            + Nhập Key hàng loạt (TXT / CSV)
+        </button>
+    </div>
+
+    {% if message %}
+    <div class="p-3 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 text-xs font-semibold">
+        {{ message }}
+    </div>
+    {% endif %}
+
+    <!-- Filter Bar -->
+    <div class="bg-navy-800 border border-navy-700 rounded-xl p-4 flex flex-wrap gap-3 items-center justify-between text-xs">
+        <form method="GET" action="/admin/inventory" class="flex flex-wrap gap-3 items-center flex-1">
+            <select name="product_id" class="px-3 py-1.5 bg-navy-900 border border-navy-700 rounded-lg text-slate-200">
+                <option value="">-- Tất cả sản phẩm --</option>
+                {% for p in all_products %}
+                <option value="{{ p.id }}" {% if selected_product_id == p.id %}selected{% endif %}>{{ p.name }}</option>
+                {% endfor %}
+            </select>
+
+            <select name="status" class="px-3 py-1.5 bg-navy-900 border border-navy-700 rounded-lg text-slate-200">
+                <option value="">-- Tất cả trạng thái --</option>
+                <option value="AVAILABLE" {% if selected_status == 'AVAILABLE' %}selected{% endif %}>🟢 AVAILABLE (Còn hàng)</option>
+                <option value="SOLD" {% if selected_status == 'SOLD' %}selected{% endif %}>🔵 SOLD (Đã bán)</option>
+                <option value="REVOKED" {% if selected_status == 'REVOKED' %}selected{% endif %}>🔴 REVOKED (Đã thu hồi)</option>
+            </select>
+
+            <input type="text" name="search" value="{{ search_query or '' }}" placeholder="Tìm theo mã key..."
+                   class="px-3 py-1.5 bg-navy-900 border border-navy-700 rounded-lg text-slate-200 w-48">
+
+            <button type="submit" class="px-3 py-1.5 bg-navy-700 hover:bg-navy-600 rounded-lg text-slate-200 font-semibold transition">
+                Lọc dữ liệu
+            </button>
+        </form>
+        <span class="text-slate-400">Tổng cộng: <b>{{ total_keys }}</b> bản ghi</span>
+    </div>
+
+    <!-- Inventory Table -->
+    <div class="bg-navy-800 border border-navy-700 rounded-2xl shadow-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-300">
+                <thead class="text-[11px] uppercase tracking-wider text-slate-400 bg-navy-900/60 border-b border-navy-700">
+                    <tr>
+                        <th class="py-3 px-4">ID</th>
+                        <th class="py-3 px-4">Mã Key</th>
+                        <th class="py-3 px-4">Sản phẩm</th>
+                        <th class="py-3 px-4">Trạng thái</th>
+                        <th class="py-3 px-4">Người mua (Telegram ID)</th>
+                        <th class="py-3 px-4">Mã đơn</th>
+                        <th class="py-3 px-4">Thời gian xuất</th>
+                        <th class="py-3 px-4 text-right">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-navy-700/60">
+                    {% for k in keys %}
+                    <tr class="hover:bg-navy-700/30 transition">
+                        <td class="py-3 px-4 font-mono text-slate-400">{{ k.id }}</td>
+                        <td class="py-3 px-4 font-mono font-bold text-cyan-300">{{ k.key_code }}</td>
+                        <td class="py-3 px-4 text-slate-200">{{ k.product.name if k.product else k.product_id }}</td>
+                        <td class="py-3 px-4">
+                            {% if k.status.value == "AVAILABLE" %}
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">CÒN HÀNG</span>
+                            {% elif k.status.value == "SOLD" %}
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/30">ĐÃ BÁN</span>
+                            {% else %}
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-500/10 text-red-400 border border-red-500/30">THU HỒI</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4 font-mono">{{ k.buyer_telegram_id or '-' }}</td>
+                        <td class="py-3 px-4 font-mono font-semibold">{{ k.order.order_code if k.order else '-' }}</td>
+                        <td class="py-3 px-4 text-slate-400">{{ k.delivered_at.strftime('%d/%m/%Y %H:%M') if k.delivered_at else '-' }}</td>
+                        <td class="py-3 px-4 text-right">
+                            {% if k.status.value != "REVOKED" %}
+                            <form method="POST" action="/admin/inventory/{{ k.id }}/revoke" onsubmit="return confirm('Bạn có chắc chắn muốn thu hồi key này?')">
+                                <button type="submit" class="px-2.5 py-1 rounded bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-[10px] font-bold transition">
+                                    Thu hồi
+                                </button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Import Keys Modal -->
+    <div id="importKeysModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-navy-800 border border-navy-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl">
+            <div class="flex justify-between items-center pb-3 border-b border-navy-700">
+                <h3 class="text-base font-bold text-white">Nhập danh sách key vào kho</h3>
+                <button onclick="document.getElementById('importKeysModal').classList.add('hidden')" class="text-slate-400 hover:text-white">✕</button>
+            </div>
+            <form method="POST" action="/admin/inventory/import" enctype="multipart/form-data" class="mt-4 space-y-3.5 text-xs">
+                <div>
+                    <label class="block text-slate-300 font-medium mb-1">Chọn sản phẩm</label>
+                    <select name="product_id" required class="w-full px-3 py-2 bg-navy-900 border border-navy-700 rounded-xl text-slate-100 focus:outline-none focus:border-cyan-500">
+                        {% for p in all_products %}
+                        <option value="{{ p.id }}">{{ p.name }} ({{ p.duration_days }} ngày)</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-slate-300 font-medium mb-1">Dán danh sách key (Mỗi dòng một key)</label>
+                    <textarea name="raw_keys" rows="6" placeholder="KEY-1234-5678-ABCD&#10;KEY-8765-4321-DCBA&#10;..."
+                              class="w-full px-3 py-2 bg-navy-900 border border-navy-700 rounded-xl text-slate-100 font-mono focus:outline-none focus:border-cyan-500"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-slate-300 font-medium mb-1">Hoặc tải lên file TXT / CSV</label>
+                    <input type="file" name="file" accept=".txt,.csv"
+                           class="w-full text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-cyan-500/10 file:text-cyan-400 hover:file:bg-cyan-500/20">
+                </div>
+
+                <div class="p-3 rounded-lg bg-navy-900/60 border border-navy-700/60 text-slate-400 text-[11px]">
+                    ℹ️ Hệ thống sẽ tự động lọc bỏ khoảng trắng và loại trừ các mã key đã có trong kho để chống trùng lặp.
+                </div>
+
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="document.getElementById('importKeysModal').classList.add('hidden')"
+                            class="px-4 py-2 bg-navy-700 text-slate-300 rounded-xl hover:bg-navy-600 transition">Hủy</button>
+                    <button type="submit"
+                            class="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-navy-900 font-bold rounded-xl shadow transition">Bắt đầu Import</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

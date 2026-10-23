@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Hỗ trợ khách hàng - MTK Admin{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-navy-700">
+        <div>
+            <h2 class="text-2xl font-black text-white tracking-wide">TRUNG TÂM PHẢN HỒI & HỖ TRỢ (TICKETS)</h2>
+            <p class="text-xs text-slate-400 mt-0.5">Tiếp nhận báo lỗi key và trả lời khách hàng qua Telegram Bot</p>
+        </div>
+    </div>
+
+    <!-- Tickets Table -->
+    <div class="bg-navy-800 border border-navy-700 rounded-2xl shadow-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-300">
+                <thead class="text-[11px] uppercase tracking-wider text-slate-400 bg-navy-900/60 border-b border-navy-700">
+                    <tr>
+                        <th class="py-3 px-4">Mã Phiếu</th>
+                        <th class="py-3 px-4">Telegram ID</th>
+                        <th class="py-3 px-4">Tiêu đề</th>
+                        <th class="py-3 px-4">Nội dung yêu cầu</th>
+                        <th class="py-3 px-4">Trạng thái</th>
+                        <th class="py-3 px-4">Thời gian</th>
+                        <th class="py-3 px-4 text-right">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-navy-700/60">
+                    {% for t in tickets %}
+                    <tr class="hover:bg-navy-700/30 transition">
+                        <td class="py-3 px-4 font-mono font-bold text-cyan-300">{{ t.ticket_code }}</td>
+                        <td class="py-3 px-4 font-mono text-slate-200">{{ t.telegram_id }}</td>
+                        <td class="py-3 px-4 font-semibold text-white">{{ t.subject }}</td>
+                        <td class="py-3 px-4 text-slate-300 max-w-xs truncate">{{ t.message }}</td>
+                        <td class="py-3 px-4">
+                            {% if t.status.value == "OPEN" %}
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">MỚI TẠO</span>
+                            {% elif t.status.value == "RESOLVED" %}
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">ĐÃ XỬ LÝ</span>
+                            {% else %}
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-500/10 text-slate-400 border border-slate-500/30">{{ t.status.value }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4 text-slate-400">{{ t.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td class="py-3 px-4 text-right">
+                            <button onclick="openReplyModal({{ t.id }}, '{{ t.ticket_code }}', '{{ t.message | escape }}')"
+                                    class="px-2.5 py-1 rounded bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-[10px] font-bold transition">
+                                💬 Phản hồi
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Reply Modal -->
+    <div id="replyModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-navy-800 border border-navy-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl">
+            <div class="flex justify-between items-center pb-3 border-b border-navy-700">
+                <h3 class="text-base font-bold text-white">Phản hồi yêu cầu hỗ trợ</h3>
+                <button onclick="document.getElementById('replyModal').classList.add('hidden')" class="text-slate-400 hover:text-white">✕</button>
+            </div>
+            <form method="POST" action="/admin/tickets/reply" class="mt-4 space-y-3.5 text-xs">
+                <input type="hidden" name="ticket_id" id="modal_ticket_id">
+                <div>
+                    <label class="block text-slate-300 font-medium mb-1">Mã phiếu</label>
+                    <input type="text" id="modal_ticket_code" readonly class="w-full px-3 py-2 bg-navy-900/60 border border-navy-700 rounded-xl text-slate-400">
+                </div>
+                <div>
+                    <label class="block text-slate-300 font-medium mb-1">Nội dung của khách hàng</label>
+                    <div id="modal_ticket_message" class="p-3 bg-navy-900/60 border border-navy-700 rounded-xl text-slate-300"></div>
+                </div>
+                <div>
+                    <label class="block text-slate-300 font-medium mb-1">Nội dung phản hồi (Gửi trực tiếp qua Telegram)</label>
+                    <textarea name="reply_text" required rows="4" placeholder="Nhập câu trả lời hoặc key đổi mới cho khách..."
+                              class="w-full px-3 py-2 bg-navy-900 border border-navy-700 rounded-xl text-slate-100 focus:outline-none focus:border-cyan-500"></textarea>
+                </div>
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="document.getElementById('replyModal').classList.add('hidden')"
+                            class="px-4 py-2 bg-navy-700 text-slate-300 rounded-xl hover:bg-navy-600 transition">Hủy</button>
+                    <button type="submit"
+                            class="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-navy-900 font-bold rounded-xl shadow transition">Gửi phản hồi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openReplyModal(ticketId, code, msg) {
+        document.getElementById('modal_ticket_id').value = ticketId;
+        document.getElementById('modal_ticket_code').value = code;
+        document.getElementById('modal_ticket_message').innerText = msg;
+        document.getElementById('replyModal').classList.remove('hidden');
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Cài đặt tài khoản ngân hàng & SePay - MTK Admin{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-2xl">
+    <div class="pb-2 border-b border-navy-700">
+        <h2 class="text-2xl font-black text-white tracking-wide">CÀI ĐẶT TÀI KHOẢN NGÂN HÀNG & SEPAY</h2>
+        <p class="text-xs text-slate-400 mt-0.5">Số tài khoản này sẽ được tự động hiển thị trên mã VietQR khi khách bấm Mua key hoặc Nạp tiền</p>
+    </div>
+
+    {% if message %}
+    <div class="p-3 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 text-xs font-semibold">
+        {{ message }}
+    </div>
+    {% endif %}
+
+    <div class="bg-navy-800 border border-navy-700 rounded-2xl p-6 shadow-lg">
+        <form method="POST" action="/admin/bank-settings" class="space-y-4 text-xs">
+            <div>
+                <label class="block text-slate-300 font-medium mb-1.5 uppercase tracking-wider">Tên Ngân hàng thụ hưởng</label>
+                <input type="text" name="bank_name" value="{{ bank_info.bank_name }}" required
+                       placeholder="Ví dụ: MBBank, Vietcombank, Techcombank, ACB, VPBank, TPBank, BIDV..."
+                       class="w-full px-3 py-2.5 bg-navy-900 border border-navy-700 rounded-xl text-slate-100 font-bold focus:outline-none focus:border-cyan-500 text-sm">
+                <span class="text-[11px] text-slate-500 mt-1 block">Tên viết tắt chuẩn VietQR (ví dụ: MBBank, VCB, TCB, ACB, VPB, TPB, BIDV)</span>
+            </div>
+
+            <div>
+                <label class="block text-slate-300 font-medium mb-1.5 uppercase tracking-wider">Số tài khoản ngân hàng</label>
+                <input type="text" name="bank_account" value="{{ bank_info.bank_account }}" required
+                       placeholder="Ví dụ: 0987654321"
+                       class="w-full px-3 py-2.5 bg-navy-900 border border-navy-700 rounded-xl text-cyan-300 font-mono font-bold focus:outline-none focus:border-cyan-500 text-sm">
+            </div>
+
+            <div>
+                <label class="block text-slate-300 font-medium mb-1.5 uppercase tracking-wider">Tên chủ tài khoản (Viết hoa không dấu)</label>
+                <input type="text" name="account_name" value="{{ bank_info.account_name }}" required
+                       placeholder="Ví dụ: NGUYEN VAN A"
+                       class="w-full px-3 py-2.5 bg-navy-900 border border-navy-700 rounded-xl text-slate-100 uppercase font-bold focus:outline-none focus:border-cyan-500 text-sm">
+            </div>
+
+            <div class="pt-2 border-t border-navy-700/60">
+                <label class="block text-slate-300 font-medium mb-1.5 uppercase tracking-wider">SePay API Key (Để xác thực Webhook)</label>
+                <input type="text" name="sepay_api_key" value="{{ bank_info.sepay_api_key }}"
+                       placeholder="Dán API Key lấy từ my.sepay.vn"
+                       class="w-full px-3 py-2.5 bg-navy-900 border border-navy-700 rounded-xl text-slate-300 font-mono focus:outline-none focus:border-cyan-500 text-xs">
+                <span class="text-[11px] text-slate-500 mt-1 block">Lấy tại: Cổng thanh toán SePay -> Tích hợp Webhook</span>
+            </div>
+
+            <button type="submit"
+                    class="mt-4 py-3 px-6 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-navy-900 font-bold rounded-xl shadow-lg shadow-cyan-500/20 text-xs uppercase tracking-wider transition">
+                💾 Lưu thông tin thanh toán
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

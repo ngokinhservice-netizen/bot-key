@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MTK KEY BOT - Admin Panel{% endblock %}</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            900: '#0a0f1d',
+                            800: '#0f172a',
+                            700: '#1e293b',
+                            600: '#334155',
+                        },
+                        cyan: {
+                            400: '#22d3ee',
+                            500: '#06b6d4',
+                            600: '#0891b2',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; }
+    </style>
+</head>
+<body class="bg-navy-900 text-slate-100 min-h-screen flex flex-col md:flex-row antialiased">
+
+    <!-- Mobile Top Bar -->
+    <div class="md:hidden bg-navy-800 border-b border-navy-700 p-4 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+            <span class="text-cyan-400 text-xl font-black">⚡ MTK</span>
+            <span class="text-xs uppercase tracking-widest text-slate-400 font-semibold">Key Bot</span>
+        </div>
+        <button id="mobile-menu-btn" class="text-slate-300 hover:text-cyan-400 focus:outline-none">
+            <i class="fa-solid fa-bars text-xl"></i>
+        </button>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="hidden md:flex flex-col w-64 bg-navy-800 border-r border-navy-700/80 p-5 shrink-0 min-h-screen">
+        <div class="flex items-center space-x-3 pb-6 border-b border-navy-700/60">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center font-black text-white text-lg shadow-lg shadow-cyan-500/20">
+                ⚡
+            </div>
+            <div>
+                <h1 class="font-extrabold text-lg text-white tracking-wide">MTK KEY BOT</h1>
+                <p class="text-xs text-cyan-400 font-mono">ADMIN DASHBOARD</p>
+            </div>
+        </div>
+
+        <!-- Role badge -->
+        {% if admin %}
+        <div class="mt-4 px-3 py-2 bg-navy-700/50 rounded-lg border border-navy-600/40 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-user-shield text-cyan-400 text-sm"></i>
+                <span class="text-xs font-semibold text-slate-200">{{ admin.username }}</span>
+            </div>
+            <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+                {{ admin.role.value }}
+            </span>
+        </div>
+        {% endif %}
+
+        <!-- Navigation Links -->
+        <nav class="mt-6 flex-1 space-y-1.5 text-sm font-medium">
+            <a href="/admin/dashboard" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-slate-300 hover:bg-navy-700/80 hover:text-cyan-400 transition-all">
+                <i class="fa-solid fa-chart-line w-5 text-center text-cyan-400"></i>
+                <span>Tổng quan</span>
+            </a>
+            <a href="/admin/products" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-slate-300 hover:bg-navy-700/80 hover:text-cyan-400 transition-all">
+                <i class="fa-solid fa-cube w-5 text-center text-cyan-400"></i>
+                <span>Sản phẩm</span>
+            </a>
+            <a href="/admin/inventory" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-slate-300 hover:bg-navy-700/80 hover:text-cyan-400 transition-all">
+                <i class="fa-solid fa-key w-5 text-center text-cyan-400"></i>
+                <span>Kho Key & Import</span>
+            </a>
+            <a href="/admin/orders" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-slate-300 hover:bg-navy-700/80 hover:text-cyan-400 transition-all">
+                <i class="fa-solid fa-receipt w-5 text-center text-cyan-400"></i>
+                <span>Đơn hàng</span>
+            </a>
+            <a href="/admin/users" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-slate-300 hover:bg-navy-700/80 hover:text-cyan-400 transition-all">
+                <i class="fa-solid fa-users w-5 text-center text-cyan-400"></i>
+                <span>Khách hàng & Ví</span>
+            </a>
+            <a href="/admin/discounts" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-slate-300 hover:bg-navy-700/80 hover:text-cyan-400 transition-all">
+                <i class="fa-solid fa-tags w-5 text-center text-cyan-400"></i>
+                <span>Mã giảm giá</span>
+            </a>
+            <a href="/admin/tickets" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-slate-300 hover:bg-navy-700/80 hover:text-cyan-400 transition-all">
+                <i class="fa-solid fa-headset w-5 text-center text-cyan-400"></i>
+                <span>Hỗ trợ (Tickets)</span>
+            </a>
+            <a href="/admin/broadcast" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-slate-300 hover:bg-navy-700/80 hover:text-cyan-400 transition-all">
+                <i class="fa-solid fa-bullhorn w-5 text-center text-cyan-400"></i>
+                <span>Gửi thông báo</span>
+            </a>
+            <a href="/admin/bank-settings" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-slate-300 hover:bg-navy-700/80 hover:text-cyan-400 transition-all">
+                <i class="fa-solid fa-building-columns w-5 text-center text-cyan-400"></i>
+                <span>Cài đặt STK & SePay</span>
+            </a>
+            <a href="/admin/audit-logs" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-slate-300 hover:bg-navy-700/80 hover:text-cyan-400 transition-all">
+                <i class="fa-solid fa-shield-halved w-5 text-center text-cyan-400"></i>
+                <span>Nhật ký kiểm toán</span>
+            </a>
+        </nav>
+
+        <!-- Bottom Actions -->
+        <div class="pt-4 border-t border-navy-700/60 space-y-2">
+            <a href="/admin/export/orders.csv" class="flex items-center space-x-2 text-xs text-slate-400 hover:text-cyan-400 transition">
+                <i class="fa-solid fa-file-csv"></i>
+                <span>Xuất CSV đơn hàng</span>
+            </a>
+            <a href="/admin/logout" class="flex items-center space-x-2 text-xs text-red-400 hover:text-red-300 transition">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                <span>Đăng xuất</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 p-6 md:p-8 overflow-y-auto">
+        {% block content %}{% endblock %}
+    </main>
+
+    <script>
+        const btn = document.getElementById('mobile-menu-btn');
+        const sidebar = document.getElementById('sidebar');
+        if (btn && sidebar) {
+            btn.addEventListener('click', () => {
+                sidebar.classList.toggle('hidden');
+                sidebar.classList.toggle('flex');
+            });
+        }
+    </script>
+</body>
+</html>

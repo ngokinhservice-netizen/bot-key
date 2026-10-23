@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Nhật ký kiểm toán - MTK Admin{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="pb-2 border-b border-navy-700">
+        <h2 class="text-2xl font-black text-white tracking-wide">NHẬT KÝ KIỂM TOÁN HỆ THỐNG (AUDIT LOGS)</h2>
+        <p class="text-xs text-slate-400 mt-0.5">Theo dõi mọi thay đổi nhạy cảm: sửa số dư, hoàn tiền, xuất key, khóa tài khoản</p>
+    </div>
+
+    <div class="bg-navy-800 border border-navy-700 rounded-2xl shadow-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-300">
+                <thead class="text-[11px] uppercase tracking-wider text-slate-400 bg-navy-900/60 border-b border-navy-700">
+                    <tr>
+                        <th class="py-3 px-4">Thời gian</th>
+                        <th class="py-3 px-4">Admin</th>
+                        <th class="py-3 px-4">Hành động</th>
+                        <th class="py-3 px-4">Đối tượng</th>
+                        <th class="py-3 px-4">Chi tiết thay đổi</th>
+                        <th class="py-3 px-4">Địa chỉ IP</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-navy-700/60">
+                    {% for l in logs %}
+                    <tr class="hover:bg-navy-700/30 transition">
+                        <td class="py-3 px-4 text-slate-400 font-mono">{{ l.created_at.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+                        <td class="py-3 px-4 font-semibold text-cyan-300">Admin #{{ l.admin_id or 'System' }}</td>
+                        <td class="py-3 px-4">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+                                {{ l.action }}
+                            </span>
+                        </td>
+                        <td class="py-3 px-4 font-mono text-slate-300">{{ l.target_type }}:{{ l.target_id }}</td>
+                        <td class="py-3 px-4 text-slate-300 max-w-md truncate">{{ l.details }}</td>
+                        <td class="py-3 px-4 font-mono text-slate-500">{{ l.ip_address or 'Internal' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

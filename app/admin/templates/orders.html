@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Quản lý đơn hàng - MTK Admin{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-navy-700">
+        <div>
+            <h2 class="text-2xl font-black text-white tracking-wide">QUẢN LÝ ĐƠN HÀNG TOÀN HỆ THỐNG</h2>
+            <p class="text-xs text-slate-400 mt-0.5">Tìm kiếm đơn, kiểm tra trạng thái và xử lý hoàn tiền</p>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="bg-navy-800 border border-navy-700 rounded-xl p-4 flex flex-wrap gap-3 items-center justify-between text-xs">
+        <form method="GET" action="/admin/orders" class="flex flex-wrap gap-3 items-center flex-1">
+            <select name="status" class="px-3 py-1.5 bg-navy-900 border border-navy-700 rounded-lg text-slate-200">
+                <option value="">-- Tất cả trạng thái --</option>
+                <option value="COMPLETED" {% if selected_status == 'COMPLETED' %}selected{% endif %}>🟢 COMPLETED (Thành công)</option>
+                <option value="PENDING" {% if selected_status == 'PENDING' %}selected{% endif %}>🟡 PENDING (Chờ thanh toán)</option>
+                <option value="PARTIAL_PAID" {% if selected_status == 'PARTIAL_PAID' %}selected{% endif %}>🟠 PARTIAL_PAID (Thiếu tiền)</option>
+                <option value="REFUNDED" {% if selected_status == 'REFUNDED' %}selected{% endif %}>🟣 REFUNDED (Đã hoàn tiền)</option>
+                <option value="CANCELLED" {% if selected_status == 'CANCELLED' %}selected{% endif %}>🔴 CANCELLED (Đã hủy)</option>
+            </select>
+
+            <input type="text" name="search" value="{{ search_query or '' }}" placeholder="Mã đơn / Telegram ID..."
+                   class="px-3 py-1.5 bg-navy-900 border border-navy-700 rounded-lg text-slate-200 w-52">
+
+            <button type="submit" class="px-3 py-1.5 bg-navy-700 hover:bg-navy-600 rounded-lg text-slate-200 font-semibold transition">
+                Tìm kiếm
+            </button>
+        </form>
+        <span class="text-slate-400">Tổng cộng: <b>{{ total_orders }}</b> đơn</span>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="bg-navy-800 border border-navy-700 rounded-2xl shadow-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-300">
+                <thead class="text-[11px] uppercase tracking-wider text-slate-400 bg-navy-900/60 border-b border-navy-700">
+                    <tr>
+                        <th class="py-3 px-4">Mã đơn</th>
+                        <th class="py-3 px-4">Khách hàng</th>
+                        <th class="py-3 px-4">Sản phẩm</th>
+                        <th class="py-3 px-4">Số tiền</th>
+                        <th class="py-3 px-4">Phương thức</th>
+                        <th class="py-3 px-4">Trạng thái</th>
+                        <th class="py-3 px-4">Thời gian tạo</th>
+                        <th class="py-3 px-4 text-right">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-navy-700/60">
+                    {% for o in orders %}
+                    <tr class="hover:bg-navy-700/30 transition">
+                        <td class="py-3 px-4 font-mono font-bold text-white">{{ o.order_code }}</td>
+                        <td class="py-3 px-4">
+                            <span class="font-mono text-cyan-300">{{ o.telegram_id }}</span>
+                        </td>
+                        <td class="py-3 px-4 text-slate-200">{{ o.product.name if o.product else o.product_id }}</td>
+                        <td class="py-3 px-4 font-semibold text-cyan-300">
+                            {{ o.final_amount_formatted }}
+                            {% if o.discount_amount > 0 %}
+                            <span class="text-[10px] text-emerald-400 block">(-{{ o.discount_amount_formatted }})</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4 font-mono text-[11px]">{{ o.payment_method.value }}</td>
+                        <td class="py-3 px-4">
+                            {% if o.status.value == "COMPLETED" %}
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">HOÀN TẤT</span>
+                            {% elif o.status.value == "PENDING" %}
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">CHỜ TIỀN</span>
+                            {% elif o.status.value == "PARTIAL_PAID" %}
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-500/10 text-orange-400 border border-orange-500/30">THIẾU TIỀN</span>
+                            {% elif o.status.value == "REFUNDED" %}
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/30">HOÀN TIỀN</span>
+                            {% else %}
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-500/10 text-slate-400 border border-slate-500/30">{{ o.status.value }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4 text-slate-400">{{ o.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td class="py-3 px-4 text-right">
+                            {% if o.status.value in ["COMPLETED", "PAID"] %}
+                            <form method="POST" action="/admin/orders/{{ o.id }}/refund" onsubmit="return confirm('Bạn có chắc chắn muốn HOÀN TIỀN đơn hàng này? Tất cả key sẽ bị thu hồi và tiền hoàn lại vào ví của khách!')">
+                                <input type="hidden" name="reason" value="Hoàn tiền theo yêu cầu khách hàng">
+                                <button type="submit" class="px-2.5 py-1 rounded bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/30 text-[10px] font-bold transition">
+                                    Hoàn tiền
+                                </button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

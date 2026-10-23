@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Gửi thông báo - MTK Admin{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-3xl">
+    <div class="pb-2 border-b border-navy-700">
+        <h2 class="text-2xl font-black text-white tracking-wide">GỬI THÔNG BÁO HỆ THỐNG (BROADCAST)</h2>
+        <p class="text-xs text-slate-400 mt-0.5">Phát sóng tin nhắn cập nhật, khuyến mãi hoặc bảo trì đến toàn bộ người dùng bot</p>
+    </div>
+
+    {% if message %}
+    <div class="p-3 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 text-xs font-semibold">
+        {{ message }}
+    </div>
+    {% endif %}
+
+    <div class="bg-navy-800 border border-navy-700 rounded-2xl p-6 shadow-lg">
+        <form method="POST" action="/admin/broadcast/send" class="space-y-4 text-xs">
+            <div>
+                <label class="block text-slate-300 font-medium mb-1.5 uppercase tracking-wider">Tiêu đề thông báo</label>
+                <input type="text" name="title" required placeholder="Ví dụ: THÔNG BÁO CẬP NHẬT PHIÊN BẢN MỚI"
+                       class="w-full px-3 py-2.5 bg-navy-900 border border-navy-700 rounded-xl text-slate-100 font-bold focus:outline-none focus:border-cyan-500 text-sm">
+            </div>
+
+            <div>
+                <label class="block text-slate-300 font-medium mb-1.5 uppercase tracking-wider">Nội dung chi tiết (Hỗ trợ định dạng HTML cơ bản)</label>
+                <textarea name="content" required rows="6" placeholder="Nhập nội dung thông báo gửi đến người dùng..."
+                          class="w-full px-3 py-2.5 bg-navy-900 border border-navy-700 rounded-xl text-slate-100 focus:outline-none focus:border-cyan-500 text-xs"></textarea>
+            </div>
+
+            <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[11px]">
+                ⚠️ <b>Lưu ý:</b> Hệ thống sẽ gửi tin tuần tự để tránh chạm giới hạn Rate Limit của Telegram. Chỉ gửi các thông báo thực sự cần thiết để tránh làm phiền khách hàng.
+            </div>
+
+            <button type="submit"
+                    onclick="return confirm('Bạn có chắc chắn muốn gửi thông báo này đến TẤT CẢ người dùng?')"
+                    class="py-3 px-6 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-navy-900 font-bold rounded-xl shadow-lg shadow-cyan-500/20 text-xs uppercase tracking-wider transition">
+                🚀 Bắt đầu phát sóng thông báo
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

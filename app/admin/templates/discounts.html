@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Mã giảm giá - MTK Admin{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-navy-700">
+        <div>
+            <h2 class="text-2xl font-black text-white tracking-wide">QUẢN LÝ MÃ GIẢM GIÁ (VOUCHER)</h2>
+            <p class="text-xs text-slate-400 mt-0.5">Tạo mã giảm theo % hoặc số tiền cố định, giới hạn lượt dùng</p>
+        </div>
+        <button onclick="document.getElementById('createDiscountModal').classList.remove('hidden')"
+                class="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-navy-900 font-bold rounded-xl shadow-lg shadow-cyan-500/20 text-xs transition">
+            + Tạo mã giảm giá mới
+        </button>
+    </div>
+
+    <!-- Discounts Table -->
+    <div class="bg-navy-800 border border-navy-700 rounded-2xl shadow-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-300">
+                <thead class="text-[11px] uppercase tracking-wider text-slate-400 bg-navy-900/60 border-b border-navy-700">
+                    <tr>
+                        <th class="py-3 px-4">Mã Code</th>
+                        <th class="py-3 px-4">Loại giảm</th>
+                        <th class="py-3 px-4">Giá trị</th>
+                        <th class="py-3 px-4">Lượt dùng</th>
+                        <th class="py-3 px-4">Đơn tối thiểu</th>
+                        <th class="py-3 px-4">Hạn dùng</th>
+                        <th class="py-3 px-4">Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-navy-700/60">
+                    {% for d in discounts %}
+                    <tr class="hover:bg-navy-700/30 transition">
+                        <td class="py-3 px-4 font-mono font-bold text-cyan-300">{{ d.code }}</td>
+                        <td class="py-3 px-4">{{ d.discount_type.value }}</td>
+                        <td class="py-3 px-4 font-bold text-emerald-400">
+                            {% if d.discount_type.value == 'PERCENT' %}{{ d.discount_value }}%{% else %}{{ d.discount_value_formatted }}{% endif %}
+                        </td>
+                        <td class="py-3 px-4">{{ d.current_uses }} / {{ d.max_uses }}</td>
+                        <td class="py-3 px-4">{{ d.min_order_amount_formatted }}</td>
+                        <td class="py-3 px-4 text-slate-400">{{ d.end_date.strftime('%d/%m/%Y') }}</td>
+                        <td class="py-3 px-4">
+                            {% if d.is_active %}
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">KÍCH HOẠT</span>
+                            {% else %}
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-500/10 text-slate-400 border border-slate-500/30">TẮT</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Create Discount Modal -->
+    <div id="createDiscountModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-navy-800 border border-navy-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl">
+            <div class="flex justify-between items-center pb-3 border-b border-navy-700">
+                <h3 class="text-base font-bold text-white">Tạo mã giảm giá mới</h3>
+                <button onclick="document.getElementById('createDiscountModal').classList.add('hidden')" class="text-slate-400 hover:text-white">✕</button>
+            </div>
+            <form method="POST" action="/admin/discounts/create" class="mt-4 space-y-3.5 text-xs">
+                <div>
+                    <label class="block text-slate-300 font-medium mb-1">Mã Code (Viết hoa không dấu)</label>
+                    <input type="text" name="code" required placeholder="Ví dụ: MTK2026, GIAM50K"
+                           class="w-full px-3 py-2 bg-navy-900 border border-navy-700 rounded-xl text-slate-100 uppercase font-mono focus:outline-none focus:border-cyan-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-300 font-medium mb-1">Loại giảm giá</label>
+                        <select name="discount_type" class="w-full px-3 py-2 bg-navy-900 border border-navy-700 rounded-xl text-slate-100 focus:outline-none focus:border-cyan-500">
+                            <option value="PERCENT">Phần trăm (%)</option>
+                            <option value="FIXED">Số tiền cố định (VND)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-300 font-medium mb-1">Giá trị giảm</label>
+                        <input type="number" name="discount_value" required placeholder="Ví dụ: 10 (cho 10%) hoặc 50000"
+                               class="w-full px-3 py-2 bg-navy-900 border border-navy-700 rounded-xl text-slate-100 focus:outline-none focus:border-cyan-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-300 font-medium mb-1">Số lượt dùng tối đa</label>
+                        <input type="number" name="max_uses" value="100" required
+                               class="w-full px-3 py-2 bg-navy-900 border border-navy-700 rounded-xl text-slate-100 focus:outline-none focus:border-cyan-500">
+                    </div>
+                    <div>
+                        <label class="block text-slate-300 font-medium mb-1">Đơn hàng tối thiểu (VND)</label>
+                        <input type="number" name="min_order_amount" value="0"
+                               class="w-full px-3 py-2 bg-navy-900 border border-navy-700 rounded-xl text-slate-100 focus:outline-none focus:border-cyan-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-slate-300 font-medium mb-1">Số ngày có hiệu lực (tính từ hôm nay)</label>
+                    <input type="number" name="days_valid" value="30" required
+                           class="w-full px-3 py-2 bg-navy-900 border border-navy-700 rounded-xl text-slate-100 focus:outline-none focus:border-cyan-500">
+                </div>
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="document.getElementById('createDiscountModal').classList.add('hidden')"
+                            class="px-4 py-2 bg-navy-700 text-slate-300 rounded-xl hover:bg-navy-600 transition">Hủy</button>
+                    <button type="submit"
+                            class="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-navy-900 font-bold rounded-xl shadow transition">Lưu mã giảm giá</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

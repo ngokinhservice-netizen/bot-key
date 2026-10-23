@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: mtk-key-bot
+    env: python
+    region: singapore
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m app.main
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: SUPER_ADMIN_TELEGRAM_ID
+        value: "8650996593"
+      - key: SEPAY_BANK_NAME
+        value: VPBank
+      - key: SEPAY_BANK_ACCOUNT
+        value: "0342938622"
+      - key: SEPAY_ACCOUNT_NAME
+        value: "LEE DANG KHOA"
+      - key: SEPAY_API_KEY
+        sync: false
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"

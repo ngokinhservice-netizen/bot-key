@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Quản lý người dùng - MTK Admin{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-navy-700">
+        <div>
+            <h2 class="text-2xl font-black text-white tracking-wide">QUẢN LÝ NGƯỜI DÙNG & SỐ DƯ VÍ</h2>
+            <p class="text-xs text-slate-400 mt-0.5">Khóa/mở khóa tài khoản, điều chỉnh số dư kèm lý do kiểm toán</p>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="bg-navy-800 border border-navy-700 rounded-xl p-4 flex flex-wrap gap-3 items-center justify-between text-xs">
+        <form method="GET" action="/admin/users" class="flex flex-wrap gap-3 items-center flex-1">
+            <input type="text" name="search" value="{{ search_query or '' }}" placeholder="Tìm Username / Telegram ID / Tên..."
+                   class="px-3 py-1.5 bg-navy-900 border border-navy-700 rounded-lg text-slate-200 w-64">
+            <button type="submit" class="px-3 py-1.5 bg-navy-700 hover:bg-navy-600 rounded-lg text-slate-200 font-semibold transition">
+                Tìm kiếm
+            </button>
+        </form>
+        <span class="text-slate-400">Tổng cộng: <b>{{ total_users }}</b> người dùng</span>
+    </div>
+
+    <!-- Users Table -->
+    <div class="bg-navy-800 border border-navy-700 rounded-2xl shadow-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-300">
+                <thead class="text-[11px] uppercase tracking-wider text-slate-400 bg-navy-900/60 border-b border-navy-700">
+                    <tr>
+                        <th class="py-3 px-4">ID</th>
+                        <th class="py-3 px-4">Telegram ID</th>
+                        <th class="py-3 px-4">Tên hiển thị</th>
+                        <th class="py-3 px-4">Username</th>
+                        <th class="py-3 px-4">Số dư ví</th>
+                        <th class="py-3 px-4">Trạng thái</th>
+                        <th class="py-3 px-4">Ngày đăng ký</th>
+                        <th class="py-3 px-4 text-right">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-navy-700/60">
+                    {% for u in users %}
+                    <tr class="hover:bg-navy-700/30 transition">
+                        <td class="py-3 px-4 font-mono text-slate-400">{{ u.id }}</td>
+                        <td class="py-3 px-4 font-mono font-bold text-cyan-300">{{ u.telegram_id }}</td>
+                        <td class="py-3 px-4 text-slate-200">{{ u.full_name or 'N/A' }}</td>
+                        <td class="py-3 px-4 font-mono text-slate-400">@{{ u.username or 'N/A' }}</td>
+                        <td class="py-3 px-4 font-bold text-emerald-400">{{ u.balance_formatted }}</td>
+                        <td class="py-3 px-4">
+                            {% if u.is_banned %}
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-500/10 text-red-400 border border-red-500/30">BỊ KHÓA</span>
+                            {% else %}
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">HOẠT ĐỘNG</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4 text-slate-400">{{ u.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td class="py-3 px-4 text-right space-x-2">
+                            <!-- Adjust balance button -->
+                            <button onclick="openAdjustBalanceModal({{ u.id }}, '{{ u.telegram_id }}', {{ u.balance }})"
+                                    class="px-2.5 py-1 rounded bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-[10px] font-bold transition">
+                                💰 Sửa số dư
+                            </button>
+
+                            <!-- Ban / Unban -->
+                            <form method="POST" action="/admin/users/{{ u.id }}/toggle-ban" class="inline"
+                                  onsubmit="return confirm('Bạn có chắc chắn muốn thay đổi trạng thái khóa của người dùng này?')">
+                                <button type="submit" class="px-2.5 py-1 rounded {% if u.is_banned %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/30{% else %}bg-red-500/10 text-red-400 border border-red-500/30{% endif %} text-[10px] font-bold transition">
+                                    {% if u.is_banned %}Mở khóa{% else %}Khóa{% endif %}
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Adjust Balance Modal -->
+    <div id="adjustBalanceModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-navy-800 border border-navy-700 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+            <div class="flex justify-between items-center pb-3 border-b border-navy-700">
+                <h3 class="text-base font-bold text-white">Điều chỉnh số dư người dùng</h3>
+                <button onclick="document.getElementById('adjustBalanceModal').classList.add('hidden')" class="text-slate-400 hover:text-white">✕</button>
+            </div>
+            <form method="POST" action="/admin/users/adjust-balance" class="mt-4 space-y-3.5 text-xs">
+                <input type="hidden" name="user_id" id="modal_user_id">
+                <div>
+                    <label class="block text-slate-300 font-medium mb-1">Telegram ID</label>
+                    <input type="text" id="modal_telegram_id" readonly
+                           class="w-full px-3 py-2 bg-navy-900/60 border border-navy-700 rounded-xl text-slate-400">
+                </div>
+                <div>
+                    <label class="block text-slate-300 font-medium mb-1">Số tiền cộng hoặc trừ (VND)</label>
+                    <input type="number" name="amount" required placeholder="Nhập dương để cộng (+), âm để trừ (-)"
+                           class="w-full px-3 py-2 bg-navy-900 border border-navy-700 rounded-xl text-slate-100 focus:outline-none focus:border-cyan-500">
+                </div>
+                <div>
+                    <label class="block text-slate-300 font-medium mb-1">Lý do điều chỉnh (Bắt buộc ghi audit log)</label>
+                    <textarea name="reason" required rows="2" placeholder="Ví dụ: Đền bù lỗi key đơn #DH12345"
+                              class="w-full px-3 py-2 bg-navy-900 border border-navy-700 rounded-xl text-slate-100 focus:outline-none focus:border-cyan-500"></textarea>
+                </div>
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="document.getElementById('adjustBalanceModal').classList.add('hidden')"
+                            class="px-4 py-2 bg-navy-700 text-slate-300 rounded-xl hover:bg-navy-600 transition">Hủy</button>
+                    <button type="submit"
+                            class="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-navy-900 font-bold rounded-xl shadow transition">Xác nhận cập nhật</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openAdjustBalanceModal(userId, telegramId, balance) {
+        document.getElementById('modal_user_id').value = userId;
+        document.getElementById('modal_telegram_id').value = telegramId;
+        document.getElementById('adjustBalanceModal').classList.remove('hidden');
+    }
+</script>
+{% endblock %}
