@@ -252,7 +252,7 @@ async def handle_thongke_command(event, session: AsyncSession):
     )).scalar() or 0
 
     lines = [
-        "📊 <b>BÁO CÁO NHANH KHO KEY & DOANH THU MTK</b>\n",
+        "📊 <b>BÁO CÁO NHANH KHO KEY & DOANH THU SHARK COMPANY</b>\n",
         f"💰 Tổng doanh thu: <b>{format_vnd(total_rev)}</b>",
         f"🧾 Đơn hoàn tất: <b>{orders_count} đơn</b>\n",
         "📦 <b>Chi tiết tồn kho:</b>"

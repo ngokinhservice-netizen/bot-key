@@ -80,7 +80,7 @@ class ProductService:
             duration_days=duration_days,
             is_active=True,
             image_url=image_url,
-            activation_guide=activation_guide or "Nhập mã key vào phần mềm MTK để kích hoạt bản quyền.",
+            activation_guide=activation_guide or "Nhập mã key vào phần mềm SHARK COMPANY để kích hoạt bản quyền.",
         )
         session.add(product)
         await session.flush()

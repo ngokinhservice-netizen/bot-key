@@ -16,8 +16,8 @@ router = Router(name="support_router")
 async def show_support_menu(callback: CallbackQuery):
     """Show support options"""
     text = (
-        "🎧 <b>TRUNG TÂM HỖ TRỢ KHÁCH HÀNG MTK</b>\n\n"
-        "Đội ngũ kỹ thuật MTK luôn sẵn sàng hỗ trợ bạn 24/7:\n\n"
+        "🎧 <b>TRUNG TÂM HỖ TRỢ KHÁCH HÀNG SHARK COMPANY</b>\n\n"
+        "Đội ngũ kỹ thuật SHARK COMPANY luôn sẵn sàng hỗ trợ bạn 24/7:\n\n"
         "• Bảo hành đổi key mới nếu lỗi do nhà sản xuất.\n"
         "• Hướng dẫn cài đặt và kích hoạt bản quyền từ A - Z.\n"
         "• Tra soát thanh toán bị sai nội dung hoặc thiếu tiền.\n\n"
@@ -81,7 +81,7 @@ async def submit_ticket_message(message: Message, state: FSMContext, session: As
     await message.answer(
         f"✅ <b>ĐÃ GỬI YÊU CẦU HỖ TRỢ THÀNH CÔNG!</b>\n\n"
         f"Mã phiếu: <code>#{ticket.ticket_code}</code>\n"
-        f"Kỹ thuật viên MTK đã tiếp nhận và sẽ phản hồi bạn trong thời gian sớm nhất.",
+        f"Kỹ thuật viên SHARK COMPANY đã tiếp nhận và sẽ phản hồi bạn trong thời gian sớm nhất.",
         reply_markup=get_back_to_main_keyboard(),
         parse_mode="HTML"
     )

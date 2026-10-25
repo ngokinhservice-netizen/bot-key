@@ -17,11 +17,11 @@ def is_user_admin(telegram_id: int) -> bool:
 def build_welcome_text(user: User) -> str:
     user_name = user.full_name or user.username or "Khách hàng"
     return (
-        f"⚡ <b>CHÀO MỪNG ĐẾN VỚI MTK KEY BOT</b> ⚡\n"
+        f"⚡ <b>CHÀO MỪNG ĐẾN VỚI SHARK COMPANY</b> ⚡\n"
         f"<i>Hệ thống phân phối bản quyền phần mềm tự động 24/7</i>\n\n"
         f"👤 <b>Tài khoản:</b> {user_name}\n"
         f"🆔 <b>Telegram ID:</b> <code>{user.telegram_id}</code>\n\n"
-        f"🚀 <b>Cam kết từ MTK:</b>\n"
+        f"🚀 <b>Cam kết từ SHARK COMPANY:</b>\n"
         f"• Key chính hãng 100%, bảo hành trọn đời gói mua.\n"
         f"• Mua quét QR tự động nhả key ngay sau 3-10 giây.\n"
         f"• Hỗ trợ kỹ thuật và kích hoạt nhanh chóng.\n\n"

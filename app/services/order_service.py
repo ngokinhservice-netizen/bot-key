@@ -187,7 +187,7 @@ class OrderService:
 
         # Fetch product info
         product = await ProductService.get_by_id(session, order.product_id)
-        product_name = product.name if product else "Phần mềm MTK"
+        product_name = product.name if product else "Phần mềm SHARK COMPANY"
         guide = product.activation_guide if product and product.activation_guide else "Kích hoạt bằng cách nhập key vào phần mềm."
 
         # Prepare delivery message

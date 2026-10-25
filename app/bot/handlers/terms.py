@@ -9,7 +9,7 @@ router = Router(name="terms_router")
 async def show_terms_of_service(callback: CallbackQuery):
     """Display MTK Terms of Service and Warranty Policy"""
     text = (
-        "📜 <b>ĐIỀU KHOẢN DỊCH VỤ & CHÍNH SÁCH BẢO HÀNH MTK</b>\n\n"
+        "📜 <b>ĐIỀU KHOẢN DỊCH VỤ & CHÍNH SÁCH BẢO HÀNH SHARK COMPANY</b>\n\n"
         "<b>1. Quy định giao nhận key:</b>\n"
         "• Hệ thống giao key tự động 100% qua Telegram ngay sau khi nhận được thanh toán hợp lệ.\n"
         "• Khách hàng chịu trách nhiệm bảo mật key cá nhân sau khi nhận.\n\n"

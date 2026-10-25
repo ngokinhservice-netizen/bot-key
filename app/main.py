@@ -129,7 +129,7 @@ async def background_order_cleaner():
 async def lifespan(app: FastAPI):
     global bot_task, cleanup_task
 
-    logger.info("=== STARTING MTK KEY BOT SYSTEM ===")
+    logger.info("=== STARTING SHARK COMPANY KEY BOT SYSTEM ===")
     # 1. Init Database
     await init_db()
     await seed_initial_data()
@@ -162,7 +162,7 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    logger.info("=== SHUTTING DOWN MTK KEY BOT SYSTEM ===")
+    logger.info("=== SHUTTING DOWN SHARK COMPANY KEY BOT SYSTEM ===")
     if keepalive_task:
         keepalive_task.cancel()
     if cleanup_task:
@@ -176,8 +176,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="MTK Key Bot & Admin API",
-    description="Hệ thống bán key bản quyền phần mềm tự động MTK với SePay Webhook & Telegram Bot",
+    title="SHARK COMPANY Key Bot & Admin API",
+    description="Hệ thống bán key bản quyền phần mềm tự động SHARK COMPANY với SePay Webhook & Telegram Bot",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -196,7 +196,7 @@ async def root():
 async def health_check():
     return {
         "status": "healthy",
-        "service": "MTK Key Bot",
+        "service": "SHARK COMPANY Key Bot",
         "version": "1.0.0",
         "environment": settings.ENVIRONMENT,
     }

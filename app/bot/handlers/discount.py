@@ -19,7 +19,7 @@ async def show_discount_info(callback: CallbackQuery, session: AsyncSession):
 
     lines = [
         "🎁 <b>CHƯƠNG TRÌNH KHUYẾN MÃI & MÃ GIẢM GIÁ</b>\n",
-        "Hệ thống thường xuyên tung ra các mã giảm giá đặc quyền cho thành viên MTK.\n",
+        "Hệ thống thường xuyên tung ra các mã giảm giá đặc quyền cho khách hàng SHARK COMPANY.\n",
     ]
 
     if codes:

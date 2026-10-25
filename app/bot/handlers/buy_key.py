@@ -33,7 +33,7 @@ async def show_product_catalog(callback: CallbackQuery, session: AsyncSession):
         return
 
     text = (
-        "🛒 <b>CHỌN GÓI BẢN QUYỀN PHẦN MỀM MTK</b>\n\n"
+        "🛒 <b>CHỌN GÓI BẢN QUYỀN PHẦN MỀM SHARK COMPANY</b>\n\n"
         "💡 <i>Chạm vào gói bạn muốn mua bên dưới để nhận mã QR thanh toán và nhận key tự động:</i>"
     )
 
@@ -56,7 +56,7 @@ async def show_product_catalog(callback: CallbackQuery, session: AsyncSession):
 async def render_order_qr_screen(message_target, session: AsyncSession, order: Order, user: User):
     """Render VietQR bank transfer details for order with automatic QR photo"""
     product = await ProductService.get_by_id(session, order.product_id)
-    product_name = product.name if product else "Sản phẩm MTK"
+    product_name = product.name if product else "Sản phẩm SHARK COMPANY"
     duration = f"({product.duration_days} ngày)" if product else ""
     bank_info = await SettingService.get_bank_info(session)
 
@@ -232,7 +232,7 @@ async def change_package(callback: CallbackQuery, session: AsyncSession):
 
     products = await ProductService.list_active_products(session)
     text = (
-        "🛒 <b>CHỌN GÓI BẢN QUYỀN PHẦN MỀM MTK</b>\n\n"
+        "🛒 <b>CHỌN GÓI BẢN QUYỀN PHẦN MỀM SHARK COMPANY</b>\n\n"
         "💡 <i>Chạm vào gói bạn muốn mua bên dưới để nhận mã QR thanh toán và nhận key tự động:</i>"
     )
     await callback.message.answer(

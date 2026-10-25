@@ -566,7 +566,7 @@ async def reply_ticket_submit(
         bot = get_bot()
         msg = (
             f"📩 <b>PHẢN HỒI YÊU CẦU HỖ TRỢ #{ticket.ticket_code}</b>\n\n"
-            f"Kỹ thuật viên MTK đã phản hồi vấn đề của bạn:\n\n"
+            f"Kỹ thuật viên SHARK COMPANY đã phản hồi vấn đề của bạn:\n\n"
             f"<i>\"{reply_text}\"</i>\n\n"
             f"Nếu cần hỗ trợ thêm, bạn có thể gửi tin nhắn phản hồi tiếp qua mục <b>🎧 Hỗ trợ</b>."
         )

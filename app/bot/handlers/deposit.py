@@ -23,7 +23,7 @@ router = Router(name="deposit_router")
 async def choose_deposit_amount(callback: CallbackQuery, user: User):
     """Show deposit denomination menu"""
     text = (
-        f"💰 <b>NẠP TIỀN VÀO VÍ MTK</b>\n\n"
+        f"💰 <b>NẠP TIỀN VÀO VÍ SHARK COMPANY</b>\n\n"
         f"• Số dư hiện tại: <b>{format_vnd(user.balance)}</b>\n"
         f"• Tự động cộng tiền trong 3 - 10 giây qua SePay.\n"
         f"• Tối thiểu: 10.000 đ | Tối đa: 20.000.000 đ\n\n"

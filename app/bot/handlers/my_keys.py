@@ -48,7 +48,7 @@ async def view_my_keys(callback: CallbackQuery, session: AsyncSession, user: Use
 
     for idx, key in enumerate(keys, 1):
         product = await ProductService.get_by_id(session, key.product_id)
-        prod_name = product.name if product else "Phần mềm MTK"
+        prod_name = product.name if product else "Phần mềm SHARK COMPANY"
         deliv_date = key.delivered_at.strftime("%d/%m/%Y %H:%M") if key.delivered_at else "N/A"
         status_tag = "✅ Còn hạn" if key.status.value == "SOLD" else f"⚠️ {key.status.value}"
 

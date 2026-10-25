@@ -20,7 +20,7 @@ async def show_affiliate_dashboard(callback: CallbackQuery, session: AsyncSessio
 
     text = (
         f"👥 <b>CHƯƠNG TRÌNH CỘNG TÁC VIÊN (AFFILIATE)</b>\n\n"
-        f"Kiếm thu nhập thụ động hấp dẫn khi giới thiệu bạn bè mua key tại MTK!\n\n"
+        f"Kiếm thu nhập thụ động hấp dẫn khi giới thiệu bạn bè mua key tại SHARK COMPANY!\n\n"
         f"🔗 <b>Link giới thiệu của bạn:</b>\n"
         f"<code>{ref_link}</code>\n"
         f"<i>(Chạm vào link để sao chép và gửi cho bạn bè)</i>\n\n"
