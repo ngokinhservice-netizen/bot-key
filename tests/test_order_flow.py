@@ -53,20 +53,31 @@ async def test_order_purchase_success_via_balance(db_session: AsyncSession, seed
 
 
 @pytest.mark.asyncio
-async def test_out_of_stock_fails(db_session: AsyncSession, seed_data):
-    """Test 5: Không thể mua key khi hết hàng"""
+async def test_out_of_stock_allows_order_and_marks_completed(db_session: AsyncSession, seed_data, mock_bot):
+    """Test 5: Kho hết key vẫn cho mua và khi thanh toán vẫn báo đơn xanh COMPLETED"""
     user1 = seed_data["user1"]
     product = seed_data["product"]
 
-    # No keys imported for this product
-    with pytest.raises(ValueError, match="hết hàng"):
-        await OrderService.create_order(
-            session=db_session,
-            user_id=user1.id,
-            telegram_id=user1.telegram_id,
-            product_id=product.id,
-            quantity=1,
-        )
+    # No keys imported for this product, order should still be created successfully
+    order = await OrderService.create_order(
+        session=db_session,
+        user_id=user1.id,
+        telegram_id=user1.telegram_id,
+        product_id=product.id,
+        quantity=1,
+    )
+    assert order.status == OrderStatus.PENDING
+
+    # When completed, order should be marked COMPLETED (báo xanh)
+    success, msg, keys = await OrderService.complete_order(
+        session=db_session,
+        order_id=order.id,
+        bot=mock_bot,
+    )
+    assert success is True
+    assert order.status == OrderStatus.COMPLETED
+    assert len(keys) == 0  # No auto keys delivered, manual delivery flagged
+    assert "hết key" in order.note
 
 
 @pytest.mark.asyncio

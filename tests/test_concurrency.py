@@ -48,9 +48,9 @@ async def test_race_condition_concurrent_purchase_last_key(db_session: AsyncSess
     res2, msg2, keys2 = await OrderService.pay_with_balance(db_session, order2.id, bot=mock_bot)
     await db_session.commit()
 
-    assert res2 is False
-    assert "hết hàng" in msg2.lower() or "không đủ" in msg2.lower()
-    assert len(keys2) == 0
+    assert res2 is True  # Order marked COMPLETED / báo xanh
+    assert len(keys2) == 0  # No duplicate key sold, manual delivery flagged
+    assert "hết" in order2.note.lower()
 
     # Verify key table: exactly 1 key exists, sold to user1
     stmt = select(KeyInventory).where(KeyInventory.key_code == "MTK-LAST-SURVIVING-KEY")

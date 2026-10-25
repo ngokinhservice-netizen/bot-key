@@ -8,10 +8,8 @@ def get_product_list_keyboard(products_with_stock: List[Tuple[Product, int]]) ->
     """Generate keyboard for selecting a software product - 1 tap directly to QR checkout"""
     rows = []
     for prod, stock in products_with_stock:
-        status_icon = "🟢" if stock > 0 else "🔴"
-        stock_text = f"Còn {stock}" if stock > 0 else "Tạm hết"
         duration_text = f"{prod.duration_days} ngày"
-        btn_text = f"{status_icon} {prod.name} ({duration_text}) - {format_vnd(prod.price)}"
+        btn_text = f"🟢 {prod.name} ({duration_text}) - {format_vnd(prod.price)}"
         rows.append([InlineKeyboardButton(text=btn_text, callback_data=f"prod:buy:{prod.id}")])
 
     rows.append([InlineKeyboardButton(text="🔙 Quay lại Menu chính", callback_data="menu:home")])

@@ -15,6 +15,24 @@ from app.utils.logger import logger
 
 bot_task = None
 cleanup_task = None
+keepalive_task = None
+
+
+async def background_keepalive():
+    """Ping health endpoint periodically to keep Cloud host (Render) awake 24/7"""
+    import os, aiohttp
+    await asyncio.sleep(60)  # Wait 1 minute after boot
+    while True:
+        try:
+            render_url = os.environ.get("RENDER_EXTERNAL_URL") or os.environ.get("WEB_BASE_URL")
+            target = f"{render_url.rstrip('/')}/health" if render_url else f"http://localhost:{settings.PORT}/health"
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session:
+                async with session.get(target) as resp:
+                    if resp.status == 200:
+                        logger.debug(f"Keepalive ping successful to {target}")
+        except Exception as e:
+            logger.debug(f"Keepalive ping notice: {e}")
+        await asyncio.sleep(480)  # Every 8 minutes
 
 
 async def seed_initial_data():
@@ -139,9 +157,14 @@ async def lifespan(app: FastAPI):
     # 3. Start background order cleaner
     cleanup_task = asyncio.create_task(background_order_cleaner())
 
+    # 4. Start background keepalive ping to prevent Cloud sleep
+    keepalive_task = asyncio.create_task(background_keepalive())
+
     yield
 
     logger.info("=== SHUTTING DOWN MTK KEY BOT SYSTEM ===")
+    if keepalive_task:
+        keepalive_task.cancel()
     if cleanup_task:
         cleanup_task.cancel()
     if bot_task:

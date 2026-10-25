@@ -11,10 +11,17 @@ from app.config.settings import settings
 class IPv4AiohttpSession(AiohttpSession):
     """Force IPv4 TCP connection to bypass ISP / Windows IPv6 routing issues with Telegram API"""
     async def create_session(self) -> aiohttp.ClientSession:
-        return aiohttp.ClientSession(
-            connector=aiohttp.TCPConnector(family=socket.AF_INET),
-            json_serialize=self.json_dumps,
-        )
+        if self._should_reset_connector:
+            await self.close()
+
+        if self._session is None or self._session.closed:
+            self._session = aiohttp.ClientSession(
+                connector=aiohttp.TCPConnector(family=socket.AF_INET),
+                json_serialize=self.json_dumps,
+            )
+            self._should_reset_connector = False
+
+        return self._session
 
 
 bot: Optional[Bot] = None

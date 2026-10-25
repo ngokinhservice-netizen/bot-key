@@ -128,10 +128,6 @@ async def render_order_qr_screen(message_target, session: AsyncSession, order: O
 async def handle_buy_product(callback: CallbackQuery, session: AsyncSession, user: User):
     """Instant checkout: tap product -> instantly create order and show QR!"""
     product_id = int(callback.data.split(":")[2])
-    stock = await ProductService.get_stock_count(session, product_id)
-    if stock <= 0:
-        await callback.answer("⚠️ Gói này hiện đang tạm hết key. Vui lòng chọn gói khác hoặc liên hệ Admin!", show_alert=True)
-        return
 
     try:
         order = await OrderService.create_order(

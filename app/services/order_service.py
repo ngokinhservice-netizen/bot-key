@@ -16,6 +16,7 @@ from app.database.models import (
     Product,
     WalletTxType,
 )
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from app.services.product_service import ProductService
 from app.services.key_service import KeyService
 from app.services.discount_service import DiscountService
@@ -45,11 +46,8 @@ class OrderService:
         if not product or not product.is_active:
             raise ValueError("Sản phẩm không tồn tại hoặc đã ngừng kinh doanh.")
 
-        # Check stock availability
-        stock = await ProductService.get_stock_count(session, product_id)
-        if stock < quantity:
-            raise ValueError(f"Sản phẩm tạm thời hết hàng (Còn {stock} key khả dụng, cần {quantity}).")
-
+        # Stock availability is not blocking - customers can always place orders
+        # If out of stock upon payment, order is marked COMPLETED (báo xanh) and buyer is instructed to contact admin
         original_amount = product.price * quantity
         discount_amount = 0
         discount_obj = None
@@ -153,6 +151,8 @@ class OrderService:
             return True, "Đơn hàng đã được xử lý thành công trước đó.", existing_keys
 
         # Lock and assign keys
+        keys = []
+        is_out_of_stock = False
         try:
             keys = await KeyService.lock_and_assign_keys(
                 session=session,
@@ -162,14 +162,13 @@ class OrderService:
                 buyer_telegram_id=order.telegram_id,
             )
         except ValueError as e:
-            # Out of stock or concurrent conflict
-            logger.error(f"Cannot deliver keys for Order #{order.id}: {e}")
-            order.status = OrderStatus.FAILED
-            order.note = f"Lỗi xuất kho: {str(e)}"
-            await session.flush()
-            return False, str(e), []
+            # Out of stock: As specifically requested by Admin, still mark order as COMPLETED (báo xanh)
+            # and prompt buyer + admin for manual key delivery
+            logger.warning(f"Key inventory empty for Order #{order.id}: {e}. Marking COMPLETED (báo xanh) and prompting manual delivery.")
+            is_out_of_stock = True
+            order.note = "Đã thanh toán thành công - Kho hết key tự động, cần Admin cấp key thủ công"
 
-        # Update order status
+        # Update order status - Always COMPLETED (báo đơn xanh)
         now = datetime.now(timezone.utc)
         order.status = OrderStatus.COMPLETED
         order.updated_at = now
@@ -191,22 +190,42 @@ class OrderService:
         product_name = product.name if product else "Phần mềm MTK"
         guide = product.activation_guide if product and product.activation_guide else "Kích hoạt bằng cách nhập key vào phần mềm."
 
-        # Format key list for message
-        key_list_str = "\n".join([f"🔑 `<code>{k.key_code}</code>`" for k in keys])
-
-        delivery_msg = (
-            f"🎉 <b>THANH TOÁN THÀNH CÔNG! ĐƠN HÀNG #{order.order_code}</b>\n\n"
-            f"📦 <b>Sản phẩm:</b> {product_name}\n"
-            f"⏳ <b>Thời hạn:</b> {product.duration_days if product else 'N/A'} ngày\n"
-            f"💰 <b>Thanh toán:</b> {format_vnd(order.final_amount)}\n\n"
-            f"━━━━━━━━━━━━━━━━━━━\n"
-            f"🔑 <b>DANH SÁCH KEY CỦA BẠN:</b>\n"
-            f"{key_list_str}\n"
-            f"<i>(Chạm vào key để sao chép nhanh)</i>\n"
-            f"━━━━━━━━━━━━━━━━━━━\n\n"
-            f"📖 <b>Hướng dẫn kích hoạt:</b>\n{guide}\n\n"
-            f"💡 Bạn luôn có thể xem lại key trong mục <b>📦 Key của tôi</b> bất cứ lúc nào."
-        )
+        # Prepare delivery message
+        reply_markup = None
+        if not is_out_of_stock:
+            key_list_str = "\n".join([f"🔑 <code>{k.key_code}</code>" for k in keys])
+            delivery_msg = (
+                f"🎉 <b>THANH TOÁN THÀNH CÔNG! ĐƠN HÀNG #{order.order_code}</b>\n\n"
+                f"📦 <b>Sản phẩm:</b> {product_name}\n"
+                f"⏳ <b>Thời hạn:</b> {product.duration_days if product else 'N/A'} ngày\n"
+                f"💰 <b>Thanh toán:</b> {format_vnd(order.final_amount)}\n\n"
+                f"━━━━━━━━━━━━━━━━━━━\n"
+                f"🔑 <b>DANH SÁCH KEY CỦA BẠN:</b>\n"
+                f"{key_list_str}\n"
+                f"<i>(Chạm vào key để sao chép nhanh)</i>\n"
+                f"━━━━━━━━━━━━━━━━━━━\n\n"
+                f"📖 <b>Hướng dẫn kích hoạt:</b>\n{guide}\n\n"
+                f"💡 Bạn luôn có thể xem lại key trong mục <b>📦 Key của tôi</b> bất cứ lúc nào."
+            )
+        else:
+            delivery_msg = (
+                f"🎉 <b>THANH TOÁN THÀNH CÔNG! ĐƠN HÀNG #{order.order_code}</b>\n\n"
+                f"📦 <b>Sản phẩm:</b> {product_name}\n"
+                f"⏳ <b>Thời hạn:</b> {product.duration_days if product else 'N/A'} ngày\n"
+                f"💰 <b>Số tiền đã nhận:</b> <b>{format_vnd(order.final_amount)}</b>\n"
+                f"🟢 <b>Trạng thái:</b> Đã thanh toán thành công\n\n"
+                f"━━━━━━━━━━━━━━━━━━━\n"
+                f"⚠️ <b>THÔNG BÁO TẠM HẾT KEY TỰ ĐỘNG:</b>\n"
+                f"Hệ thống đã nhận được thanh toán của bạn. Do số lượng đặt mua lớn, kho key tự động của gói này đang tạm hết.\n\n"
+                f"👉 <b>Vui lòng bấm nút bên dưới để nhắn tin Admin (@{settings.SUPPORT_TELEGRAM_USERNAME}) nhận key ngay:</b>\n"
+                f"• Mã đơn của bạn: <code>#{order.order_code}</code>\n"
+                f"━━━━━━━━━━━━━━━━━━━"
+            )
+            reply_markup = InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [InlineKeyboardButton(text="💬 Nhắn Admin nhận key ngay", url=f"https://t.me/{settings.SUPPORT_TELEGRAM_USERNAME}")],
+                ]
+            )
 
         # Send private Telegram message
         if bot:
@@ -214,27 +233,36 @@ class OrderService:
                 await bot.send_message(
                     chat_id=order.telegram_id,
                     text=delivery_msg,
+                    reply_markup=reply_markup,
                     parse_mode="HTML",
                 )
-                logger.info(f"Delivered key(s) to Telegram ID {order.telegram_id} for Order #{order.order_code}")
+                logger.info(f"Delivered message to Telegram ID {order.telegram_id} for Order #{order.order_code}")
             except Exception as e:
-                # User blocked bot or chat unavailable:
-                # Do NOT rollback! Keys are safely stored in DB for retrieval via /start -> "Key của tôi".
-                logger.warning(
-                    f"Could not send Telegram message to user {order.telegram_id} (bot might be blocked): {e}. Keys remain safe in DB."
-                )
+                logger.warning(f"Could not send Telegram message to user {order.telegram_id}: {e}")
 
             # Notify Super Admin
             if settings.SUPER_ADMIN_TELEGRAM_ID and settings.SUPER_ADMIN_TELEGRAM_ID > 0:
                 try:
-                    admin_notice = (
-                        f"🔔 <b>[ĐƠN HÀNG MỚI THÀNH CÔNG]</b>\n\n"
-                        f"• Mã đơn: <code>{order.order_code}</code>\n"
-                        f"• Khách hàng: Telegram ID <code>{order.telegram_id}</code>\n"
-                        f"• Sản phẩm: {product_name}\n"
-                        f"• Số tiền: <b>{format_vnd(order.final_amount)}</b>\n"
-                        f"• Phương thức: {order.payment_method}"
-                    )
+                    if is_out_of_stock:
+                        admin_notice = (
+                            f"🚨 <b>[ĐƠN HÀNG ĐÃ THANH TOÁN - KHO HẾT KEY CẦN CẤP THỦ CÔNG]</b>\n\n"
+                            f"• <b>Mã đơn:</b> <code>#{order.order_code}</code>\n"
+                            f"• <b>Khách hàng:</b> Telegram ID <code>{order.telegram_id}</code>\n"
+                            f"• <b>Sản phẩm:</b> <b>{product_name}</b>\n"
+                            f"• <b>Số tiền nhận được:</b> <b>{format_vnd(order.final_amount)}</b>\n"
+                            f"• <b>Trạng thái đơn:</b> Báo xanh (COMPLETED)\n"
+                            f"• <b>Tình trạng:</b> Hết key tự động\n\n"
+                            f"👉 <b>Hành động:</b> Vui lòng gửi key cho khách qua Telegram: tg://user?id={order.telegram_id}"
+                        )
+                    else:
+                        admin_notice = (
+                            f"🔔 <b>[ĐƠN HÀNG MỚI THÀNH CÔNG]</b>\n\n"
+                            f"• <b>Mã đơn:</b> <code>#{order.order_code}</code>\n"
+                            f"• <b>Khách hàng:</b> Telegram ID <code>{order.telegram_id}</code>\n"
+                            f"• <b>Sản phẩm:</b> {product_name}\n"
+                            f"• <b>Số tiền:</b> <b>{format_vnd(order.final_amount)}</b>\n"
+                            f"• <b>Đã giao key:</b> {len(keys)} key tự động"
+                        )
                     await bot.send_message(
                         chat_id=settings.SUPER_ADMIN_TELEGRAM_ID,
                         text=admin_notice,
@@ -243,7 +271,7 @@ class OrderService:
                 except Exception as e:
                     logger.warning(f"Could not send admin notification: {e}")
 
-        return True, "Đơn hàng hoàn tất và đã giao key thành công.", keys
+        return True, "Đơn hàng hoàn tất thành công (báo xanh).", keys
 
     @staticmethod
     async def pay_with_balance(
